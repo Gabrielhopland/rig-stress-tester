@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rig Acquisition Stress-Tester</title>
+  <meta name="description" content="Test whether a drilling rig acquisition was worth the price. Loaded example: Odfjell Drilling's purchase of Deepsea Bollsta.">
+
+  <!-- Fonts: Inter for text, IBM Plex Mono for numbers ("instrument readings") -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ===================== HERO ===================== -->
+  <header class="hero">
+    <!-- The whole scene is one SVG: sky, aurora, clouds, rig, waves.
+         "slice" makes it fill the box like a background image. -->
+    <svg class="hero-scene" viewBox="0 0 1440 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <!-- Night sky: deep fjord blue at the top, steel blue at the horizon -->
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0"    stop-color="#020814"/>
+          <stop offset="0.5"  stop-color="#0a1f3a"/>
+          <stop offset="0.72" stop-color="#1b3a5c"/>
+          <stop offset="1"    stop-color="#0d2140"/>
+        </linearGradient>
+
+        <!-- Northern lights: green → teal → blue, fading out at both ends -->
+        <linearGradient id="aurora" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0"    stop-color="#3fd6a0" stop-opacity="0"/>
+          <stop offset="0.25" stop-color="#3fd6a0"/>
+          <stop offset="0.55" stop-color="#2bb5b8"/>
+          <stop offset="0.85" stop-color="#3a7bd5"/>
+          <stop offset="1"    stop-color="#3a7bd5" stop-opacity="0"/>
+        </linearGradient>
+
+        <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0"   stop-color="#9cc4e4" stop-opacity="0"/>
+          <stop offset="0.5" stop-color="#9cc4e4" stop-opacity="0.10"/>
+          <stop offset="1"   stop-color="#9cc4e4" stop-opacity="0"/>
+        </linearGradient>
+
+        <filter id="blur"><feGaussianBlur stdDeviation="22"/></filter>
+        <filter id="auroraBlur"><feGaussianBlur stdDeviation="14"/></filter>
+        <filter id="mistBlur"><feGaussianBlur stdDeviation="16"/></filter>
+        <filter id="reflectionBlur"><feGaussianBlur stdDeviation="1.2"/></filter>
+
+        <!-- Rig lattices, drawn twice with <use>: a wide light stroke (the rim)
+             under a narrow dark stroke, so the steelwork stands out against the sky.
+             Coordinates are relative to the rig: x = 0 at its centre, y = 0 at the waterline. -->
+        <path id="derrickLattice" d="
+          M-20 -116 L4 -232 M40 -116 L16 -232
+          M-11.9 -155 H31.9 M-3.9 -194 H23.9
+          M-20 -116 L31.9 -155 M40 -116 L-11.9 -155
+          M-11.9 -155 L23.9 -194 M31.9 -155 L-3.9 -194
+          M-3.9 -194 L16 -232 M23.9 -194 L4 -232"/>
+        <path id="craneBoom" d="
+          M106 -146 L208 -210 M116 -148 L212 -206 M208 -210 L212 -206
+          M106 -146 L164 -177 M157 -178 L212 -206"/>
+      </defs>
+
+      <!-- Sky -->
+      <rect width="1440" height="600" fill="url(#sky)"/>
+
+      <!-- Aurora: two soft, blurred bands that sway very slowly -->
+      <g class="aurora" filter="url(#auroraBlur)">
+        <path class="aurora-band band-1" fill="url(#aurora)"
+          d="M-100 175 C 200 115, 420 215, 700 155 S 1200 95, 1560 165 L1560 210 C 1200 150, 980 240, 700 205 S 220 170, -100 225 Z"/>
+        <path class="aurora-band band-2" fill="url(#aurora)"
+          d="M-100 110 C 260 60, 520 150, 820 100 S 1280 50, 1560 110 L1560 138 C 1260 88, 1040 172, 820 138 S 300 98, -100 148 Z"/>
+      </g>
+
+      <!-- Storm clouds: blurred ellipses drifting slowly (drawn over the aurora) -->
+      <g class="clouds" filter="url(#blur)">
+        <ellipse cx="200"  cy="120" rx="320" ry="60" fill="#132a48" opacity="0.7"/>
+        <ellipse cx="760"  cy="70"  rx="380" ry="60" fill="#0e2240" opacity="0.8"/>
+        <ellipse cx="1250" cy="160" rx="340" ry="55" fill="#173257" opacity="0.6"/>
+        <ellipse cx="560"  cy="270" rx="300" ry="40" fill="#1d3b60" opacity="0.45"/>
+      </g>
+
+      <!-- Haze along the horizon -->
+      <rect x="0" y="390" width="1440" height="80" fill="url(#fog)"/>
+
+      <!-- Semi-submersible drilling rig on the horizon.
+           .rig-place (styles.css) positions and sizes it for each screen width;
+           the inner .rig group bobs in the swell (CSS animation).
+           Dark fill + a lighter blue stroke = a subtle rim against the sky. -->
+      <g class="rig-place">
+        <g class="rig">
+          <!-- Hull, columns, decks, accommodation, crane base -->
+          <g fill="#030b16" stroke="#3a5b7e" stroke-width="1.2" stroke-linejoin="round">
+            <rect x="-160" y="-10"  width="320" height="18" rx="7"/>   <!-- pontoon (mostly under water) -->
+            <rect x="-138" y="-66"  width="42"  height="58" rx="3"/>   <!-- column -->
+            <rect x="96"   y="-66"  width="42"  height="58" rx="3"/>   <!-- column -->
+            <rect x="-96"  y="-42"  width="192" height="6"/>           <!-- bracing -->
+            <rect x="-160" y="-100" width="320" height="36"/>          <!-- lower deck box -->
+            <rect x="-150" y="-112" width="300" height="12"/>          <!-- main deck -->
+            <rect x="-156" y="-158" width="84"  height="46"/>          <!-- living quarters -->
+            <rect x="-30"  y="-124" width="80"  height="12"/>          <!-- drill floor -->
+            <rect x="104"  y="-150" width="14"  height="38"/>          <!-- crane pedestal -->
+            <rect x="96"   y="-162" width="26"  height="14" rx="2"/>   <!-- crane cab -->
+          </g>
+
+          <!-- Helideck on top of the living quarters, seen slightly from above -->
+          <path d="M-190 -166 L-156 -144" stroke="#030b16" stroke-width="3"/>
+          <ellipse cx="-154" cy="-168" rx="54" ry="10" fill="#0b1d33" stroke="#3a5b7e" stroke-width="1.2"/>
+          <ellipse cx="-154" cy="-168" rx="18" ry="4.5" fill="none" stroke="#9aaec2" stroke-width="1" opacity="0.5"/>
+          <path d="M-160 -171 V-165 M-148 -171 V-165 M-160 -168 H-148"
+                stroke="#9aaec2" stroke-width="1.6" opacity="0.85"/>     <!-- the "H" -->
+
+          <!-- Lattice derrick (rim + steel) and crown block -->
+          <use href="#derrickLattice" fill="none" stroke="#3a5b7e" stroke-width="3.6"/>
+          <use href="#derrickLattice" fill="none" stroke="#030b16" stroke-width="1.8"/>
+          <rect x="0" y="-240" width="20" height="8" fill="#030b16" stroke="#3a5b7e" stroke-width="1.2"/>
+
+          <!-- Crane: lattice boom with a hook hanging from the tip -->
+          <use href="#craneBoom" fill="none" stroke="#3a5b7e" stroke-width="3.4"/>
+          <use href="#craneBoom" fill="none" stroke="#030b16" stroke-width="1.7"/>
+          <path d="M210 -208 V-178" stroke="#030b16" stroke-width="1.2"/>
+          <rect x="207" y="-179" width="6" height="5" fill="#030b16"/>
+
+          <!-- Lifeboats hanging on the side of the deck, below the living quarters -->
+          <rect x="-150" y="-96" width="30" height="11" rx="5.5" fill="#2b4a6b" stroke="#4d6f93" stroke-width="1"/>
+          <rect x="-114" y="-96" width="30" height="11" rx="5.5" fill="#2b4a6b" stroke="#4d6f93" stroke-width="1"/>
+
+          <!-- A few lit windows -->
+          <g fill="#dceeff" opacity="0.75">
+            <rect x="-146" y="-148" width="5" height="3"/><rect x="-124" y="-148" width="5" height="3"/>
+            <rect x="-102" y="-148" width="5" height="3"/>
+            <rect x="-135" y="-134" width="5" height="3"/><rect x="-91"  y="-134" width="5" height="3"/>
+            <rect x="-40"  y="-86"  width="5" height="3"/><rect x="50"   y="-86"  width="5" height="3"/>
+          </g>
+
+          <!-- Warning beacon on top of the derrick -->
+          <circle class="beacon-glow" cx="10" cy="-245" r="8" fill="#ff5f1f" opacity="0.25"/>
+          <circle class="beacon" cx="10" cy="-245" r="2.6" fill="#ff5f1f"/>
+        </g>
+      </g>
+
+      <!-- Waves: three layers. Each path is 2880 wide (two screens)
+           and repeats every 1440, so sliding it left by 1440 loops seamlessly.
+           The front wave has the same colour as the page, so the hero
+           flows straight into the content below. -->
+      <g transform="translate(0 440)">
+        <path class="wave wave-back" fill="#0e2440"
+          d="M0 0 Q120 -10 240 0 T480 0 T720 0 T960 0 T1200 0 T1440 0 T1680 0 T1920 0 T2160 0 T2400 0 T2640 0 T2880 0 L2880 260 L0 260 Z"/>
+      </g>
+
+      <!-- Reflection of the rig's orange light on the water, right below the beacon.
+           A few short horizontal streaks that blink with the beacon and shimmer. -->
+      <g class="rig-place">
+        <g class="reflection" filter="url(#reflectionBlur)" fill="#ff5f1f">
+          <ellipse class="ripple" cx="10" cy="12" rx="8" ry="1.5"/>
+          <ellipse class="ripple" cx="10" cy="21" rx="5" ry="1.2"/>
+          <ellipse class="ripple" cx="10" cy="30" rx="7" ry="1.2"/>
+          <ellipse class="ripple" cx="10" cy="39" rx="4" ry="1"/>
+        </g>
+      </g>
+
+      <!-- Sea mist: low, blurred bands over the horizon and the base of the rig -->
+      <g class="mist" filter="url(#mistBlur)" fill="#a9c3dc">
+        <ellipse cx="100"  cy="440" rx="320" ry="16" opacity="0.10"/>
+        <ellipse cx="560"  cy="446" rx="300" ry="14" opacity="0.08"/>
+        <ellipse cx="860"  cy="438" rx="260" ry="18" opacity="0.13"/>
+        <ellipse cx="1250" cy="444" rx="340" ry="15" opacity="0.09"/>
+        <ellipse cx="1600" cy="440" rx="260" ry="14" opacity="0.08"/>
+      </g>
+      <g transform="translate(0 492)">
+        <path class="wave wave-mid" fill="#0a1c35"
+          d="M0 0 Q90 -14 180 0 T360 0 T540 0 T720 0 T900 0 T1080 0 T1260 0 T1440 0 T1620 0 T1800 0 T1980 0 T2160 0 T2340 0 T2520 0 T2700 0 T2880 0 L2880 220 L0 220 Z"/>
+      </g>
+
+      <g transform="translate(0 560)">
+        <path class="wave wave-front" fill="#071629"
+          d="M0 0 Q60 -18 120 0 T240 0 T360 0 T480 0 T600 0 T720 0 T840 0 T960 0 T1080 0 T1200 0 T1320 0 T1440 0 T1560 0 T1680 0 T1800 0 T1920 0 T2040 0 T2160 0 T2280 0 T2400 0 T2520 0 T2640 0 T2760 0 T2880 0 L2880 160 L0 160 Z"/>
+      </g>
+    </svg>
+
+    <div class="hero-content container">
+      <p class="eyebrow">North Sea · Norwegian Continental Shelf</p>
+      <h1>Rig Acquisition<br>Stress-Tester</h1>
+      <p class="lede">Test whether a drilling rig acquisition was worth the price.</p>
+      <p class="lede-sub">Loaded example: Odfjell Drilling's <span class="mono figure">USD 480m</span>
+        purchase of Deepsea Bollsta (2025).</p>
+      <a class="btn btn-primary" href="#tester">Run the stress test</a>
+    </div>
+  </header>
+
+
+  <main>
+    <!-- ===================== CURRENT DEAL ===================== -->
+    <section class="section container" id="deal">
+      <!-- Two ways to start: the sourced example, or an empty deal -->
+      <div class="deal-actions">
+        <button type="button" class="btn btn-outline" id="loadExample">Load example: Deepsea Bollsta</button>
+        <button type="button" class="btn btn-outline" id="loadBlank">Start with a blank deal</button>
+      </div>
+
+      <div class="deal-head">
+        <h2 class="deal-title"><span class="deal-title-label">Current deal:</span> <span id="dealName">Deepsea Bollsta</span></h2>
+        <button type="button" class="btn btn-ghost" id="toggleEditor" aria-expanded="false" aria-controls="dealEditor">Change deal</button>
+      </div>
+      <!-- Filled in by app.js -->
+      <p class="section-intro" id="dealIntro"></p>
+
+      <!-- The editable deal inputs, opened with "Change deal" -->
+      <div class="panel deal-editor" id="dealEditor" hidden>
+        <div class="input-grid">
+          <label>Rig name
+            <input type="text" id="inRigName" placeholder="e.g. Deepsea Example">
+          </label>
+          <label>Year of close
+            <input type="number" id="inCloseYear" min="1990" max="2100" step="1" placeholder="e.g. 2025">
+          </label>
+          <label>Purchase price (USDm)
+            <input type="number" id="inPrice" min="0" step="1" placeholder="e.g. 450">
+          </label>
+          <label>Firm backlog (USDm)
+            <input type="number" id="inBacklog" min="0" step="1" placeholder="e.g. 300">
+          </label>
+          <label>Firm-period EBITDA (USDm/yr)
+            <input type="number" id="inEbitda" min="0" step="1" placeholder="e.g. 90">
+          </label>
+          <label>Firm contract (quarters after close)
+            <input type="number" id="inQuarters" min="0" max="40" step="1" placeholder="e.g. 8">
+          </label>
+          <label>Number of options available (1 year each)
+            <input type="number" id="inMaxOptions" min="0" max="10" step="1" placeholder="e.g. 3">
+          </label>
+        </div>
+      </div>
+
+      <!-- Example: sourced facts from data.js. Own deal: the inputs above. -->
+      <dl class="facts" id="dealFacts"></dl>
+    </section>
+
+
+    <!-- ===================== STRESS TESTER ===================== -->
+    <section class="section container" id="tester">
+      <h2 class="section-title">Stress test</h2>
+
+      <div class="tester-grid">
+
+        <!-- ---------- Results (shown first on mobile) ---------- -->
+        <div class="panel results" aria-live="polite">
+          <div class="readout readout-hero">
+            <span class="readout-label">Breakeven price</span>
+            <span class="readout-value accent" id="outBreakeven">—</span>
+            <span class="readout-note" id="outVerdict"></span>
+          </div>
+
+          <div class="readout-grid">
+            <div class="readout">
+              <span class="readout-label">NPV</span>
+              <span class="readout-value" id="outNpv">—</span>
+            </div>
+            <div class="readout">
+              <span class="readout-label">IRR</span>
+              <span class="readout-value" id="outIrr">—</span>
+            </div>
+            <div class="readout">
+              <span class="readout-label">Payback</span>
+              <span class="readout-value" id="outPayback">—</span>
+              <span class="readout-note" id="outPaybackNote"></span>
+            </div>
+            <div class="readout">
+              <span class="readout-label">Backlog coverage</span>
+              <span class="readout-value" id="outCoverage">—</span>
+              <span class="readout-note">Firm backlog ÷ price</span>
+            </div>
+            <div class="readout">
+              <span class="readout-label">Implied EV / EBITDA</span>
+              <span class="readout-value" id="outMultiple">—</span>
+              <span class="readout-note">Price ÷ firm EBITDA</span>
+            </div>
+            <div class="readout">
+              <span class="readout-label">Exit</span>
+              <span class="readout-value" id="outExit">—</span>
+              <span class="readout-note" id="outExitNote"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- Controls ---------- -->
+        <div class="panel controls">
+          <div class="scenario-row">
+            <span class="control-label">Scenario</span>
+            <div class="scenario-buttons" role="group" aria-label="Scenario">
+              <button type="button" class="btn btn-scenario" data-scenario="bear">Bear</button>
+              <button type="button" class="btn btn-scenario" data-scenario="base">Base</button>
+              <button type="button" class="btn btn-scenario" data-scenario="bull">Bull</button>
+            </div>
+            <span class="scenario-status" id="scenarioStatus">Base</span>
+          </div>
+
+          <div class="slider">
+            <div class="slider-head">
+              <label for="options">Options exercised by client</label>
+              <output id="optionsOut" class="mono"></output>
+            </div>
+            <input type="range" id="options" min="0" max="5" step="1" value="3">
+            <p class="slider-hint" id="optionsHint"></p>
+          </div>
+
+          <div class="slider">
+            <div class="slider-head">
+              <label for="optionEbitda">EBITDA in option period</label>
+              <output id="optionEbitdaOut" class="mono"></output>
+            </div>
+            <input type="range" id="optionEbitda" min="40" max="180" step="5" value="100">
+            <p class="slider-hint">USDm per year. Firm period is fixed at the deal input.</p>
+          </div>
+
+          <div class="slider">
+            <div class="slider-head">
+              <label for="residual">Residual value</label>
+              <output id="residualOut" class="mono"></output>
+            </div>
+            <input type="range" id="residual" min="0" max="700" step="10" value="380">
+            <p class="slider-hint" id="residualHint"></p>
+          </div>
+
+          <div class="slider">
+            <div class="slider-head">
+              <label for="discountRate">Discount rate</label>
+              <output id="discountRateOut" class="mono"></output>
+            </div>
+            <input type="range" id="discountRate" min="6" max="15" step="0.5" value="9">
+            <p class="slider-hint">Annual rate for the asset (WACC-style), not the cost of debt.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===================== CASH FLOWS ===================== -->
+    <section class="section container" id="cashflows">
+      <h2 class="section-title">Cash flows by year</h2>
+      <p class="section-intro">EBITDA minus maintenance capex, plus the sale of the rig at exit.
+        The purchase price is paid at close and is not drawn in the chart.</p>
+
+      <!-- Shown when the deal is incomplete -->
+      <p class="panel empty-note" id="cfEmpty" hidden>Enter a purchase price, firm EBITDA and contract length
+        to see the cash flows.</p>
+
+      <div id="cfContent">
+      <div class="panel">
+        <div class="chart-legend">
+          <span><i class="swatch swatch-operating"></i>Operating cash flow</span>
+          <span><i class="swatch swatch-residual"></i>Residual value at exit</span>
+        </div>
+        <div class="chart" id="chart"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="cf-table">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Purchase</th>
+              <th>Operating CF</th>
+              <th>Residual</th>
+              <th>Net CF</th>
+              <th>Present value</th>
+              <th>Cumulative<br>(ex. residual)</th>
+            </tr>
+          </thead>
+          <tbody id="cfBody"></tbody>
+          <tfoot id="cfFoot"></tfoot>
+        </table>
+      </div>
+      </div>
+    </section>
+
+
+    <!-- ===================== REFERENCE PRICES (example only) ===================== -->
+    <section class="section container" id="compare">
+      <h2 class="section-title">Reference prices – Deepsea Bollsta</h2>
+      <p class="section-intro">What this rig and its sister rig have cost before. The dashed line is the breakeven
+        price from your current assumptions.</p>
+      <div class="panel">
+        <div class="compare" id="compareBars"></div>
+      </div>
+    </section>
+
+
+    <!-- ===================== METHOD & LIMITATIONS ===================== -->
+    <section class="section container" id="method">
+      <h2 class="section-title">Method &amp; limitations</h2>
+      <ul class="method-list">
+        <li><strong>Valuation date.</strong> Everything is valued as of the deal close (December 2025 in the Bollsta example). Cash flows are modelled quarterly and discounted back to that date in nominal USD.</li>
+        <li><strong>Cash flow = EBITDA − maintenance capex.</strong> Maintenance capex is an <em>assumption</em> of USD 10m per year. There is no separate special periodic survey cost.</li>
+        <li><strong>Unlevered view.</strong> Debt flows are left out (the Bollsta purchase was fully debt financed). We value the asset itself and discount at an asset-level (WACC-style) rate. How the buyer paid does not change what the rig is worth.</li>
+        <li><strong>Taxes ignored.</strong> Rig-owning entities typically sit in low-tax structures, so this is a simplification.</li>
+        <li><strong>Residual value.</strong> The slider sets the rig's value at the end of the firm contract. Each option year exercised adds a year of age, and the value falls 4% per year (assumption). The rig is sold at the end of the last contract year. There is no idle time or recontracting beyond the options.</li>
+        <li><strong>Payback</strong> counts operating cash only and excludes the residual value.</li>
+        <li><strong>Synergies (Bollsta example).</strong> Odfjell already operated the rig before the acquisition, so as owner it keeps the full margin with no handover cost. A strategic buyer like this can justify a higher price than a financial buyer could.</li>
+        <li><strong>Inflation (Bollsta example).</strong> USD 400m in 2017 is roughly USD 520–530m in 2025 dollars (US CPI). In real terms Odfjell paid less than Northern Ocean did.</li>
+        <li><strong>Reported figures (Bollsta example).</strong> The 2017 price and the Deepsea Mira construction cost come from a secondary source.</li>
+      </ul>
+    </section>
+  </main>
+
+
+  <!-- ===================== SOURCES ===================== -->
+  <footer class="footer">
+    <div class="container">
+      <h2 class="section-title">Sources</h2>
+      <ol class="sources" id="sourceList"></ol>
+      <p class="footer-note">Course project in M&amp;A. Not investment advice.</p>
+    </div>
+  </footer>
+
+  <!-- Order matters: data first, then the model, then the page logic -->
+  <script src="data.js"></script>
+  <script src="model.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

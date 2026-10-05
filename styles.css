@@ -1,0 +1,711 @@
+/* ============================================================
+   styles.css — North Sea look: deep fjord blues, cold and stormy
+   ------------------------------------------------------------
+   1. Colour + font variables
+   2. Base / layout
+   3. Hero (sky, aurora, mist, rig, reflection, waves)
+   4. Buttons, deal facts, panels, results, sliders
+   5. Chart, table, price comparison
+   6. Footer
+   7. Mobile / desktop adjustments
+
+   Colour rule: dark BLUE backgrounds, white and blue-grey text.
+   Safety ORANGE is the ONLY accent, used for four things:
+   the main button, the breakeven price, the Odfjell bar in the
+   price check, and the rig's warning light in the hero.
+   ============================================================ */
+
+
+/* ---------- 1. Variables: change colours in ONE place ---------- */
+:root {
+  --navy-deep: #040e1c;   /* hero + footer background */
+  --navy:      #071629;   /* page background (= front wave colour) */
+  --panel:     #0c2240;   /* cards */
+  --panel-2:   #123058;   /* card borders, slider tracks */
+  --line:      #1d426e;   /* stronger borders */
+
+  --ice:       #eaf3fb;   /* main text */
+  --ice-dim:   #9aaec2;   /* secondary text, labels (muted blue-grey) */
+  --steel:       #3e6189; /* chart: operating cash flow, comparison bars */
+  --steel-light: #6787a8; /* chart: residual value (same hue, lighter) */
+
+  --orange:    #ff5f1f;   /* safety orange — ONLY the most important things */
+  --positive:  #5fd8b8;   /* NPV above zero (cold teal-green) */
+  --negative:  #ff7f72;   /* NPV below zero */
+
+  --font-text: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --radius: 6px;
+}
+
+
+/* ---------- 2. Base ---------- */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  /* Faint nautical chart grid: two sets of 1px lines every 120px,
+     like latitude/longitude lines. Panels cover it, so it only
+     shows in the gaps around the content. */
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(to right,  rgba(154, 174, 194, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(154, 174, 194, 0.04) 1px, transparent 1px);
+  background-size: 120px 120px;
+  color: var(--ice);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--ice); }
+
+.container {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.section { padding: 56px 16px 8px; }
+#deal    { padding-top: 24px; }     /* first section sits close to the hero */
+
+.section-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ice-dim);
+}
+
+.section-intro {
+  margin: 0 0 24px;
+  max-width: 62ch;
+  color: var(--ice-dim);
+}
+.section-intro strong { color: var(--ice); font-weight: 600; }
+
+.mono       { font-family: var(--font-mono); }
+.accent     { color: var(--orange); }
+.figure     { color: var(--ice); font-weight: 500; }
+
+
+/* ---------- 3. Hero ---------- */
+.hero {
+  position: relative;
+  min-height: 520px;
+  height: 72vh;
+  max-height: 720px;
+  overflow: hidden;
+  background: var(--navy-deep);
+}
+
+.hero-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-content {
+  position: relative;      /* sits on top of the SVG */
+  z-index: 1;
+  padding-top: 72px;
+}
+
+.eyebrow {
+  margin: 0 0 16px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ice-dim);
+}
+
+.hero h1 {
+  margin: 0 0 16px;
+  font-size: clamp(34px, 6vw, 60px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  margin: 0 0 8px;
+  max-width: 46ch;
+  font-size: clamp(16px, 2vw, 19px);
+  color: var(--ice-dim);
+}
+
+/* Smaller line under the lede: which example is loaded */
+.lede-sub {
+  margin: 0 0 28px;
+  max-width: 52ch;
+  font-size: 14px;
+  color: var(--ice-dim);
+}
+
+/* Waves: slide each layer left by exactly one repeat (1440). */
+.wave       { animation: drift linear infinite; }
+.wave-back  { animation-duration: 70s; }
+.wave-mid   { animation-duration: 45s; }
+.wave-front { animation-duration: 30s; }
+
+@keyframes drift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-1440px); }
+}
+
+/* Clouds drift back and forth very slowly. */
+.clouds { animation: clouds 90s ease-in-out infinite alternate; }
+@keyframes clouds {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-160px); }
+}
+
+/* Aurora: faint overall, gently brightening and fading.
+   The two bands sway sideways in opposite directions. */
+.aurora { opacity: 0.26; animation: aurora-glow 20s ease-in-out infinite alternate; }
+.band-1 { animation: sway-left  50s ease-in-out infinite alternate; }
+.band-2 { animation: sway-right 65s ease-in-out infinite alternate; }
+
+@keyframes aurora-glow {
+  from { opacity: 0.18; }
+  to   { opacity: 0.36; }
+}
+@keyframes sway-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-90px); }
+}
+@keyframes sway-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(70px); }
+}
+
+/* Sea mist along the horizon: drifts slowly sideways, so the rig
+   sits in and out of the haze. */
+.mist { animation: mist 60s ease-in-out infinite alternate; }
+@keyframes mist {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-120px); }
+}
+
+/* Reflection of the warning light on the water.
+   The group blinks in step with the beacon (same 2.4s timing);
+   each streak shimmers sideways a little, like light on moving water. */
+.reflection { animation: reflect 2.4s steps(1) infinite; }
+@keyframes reflect {
+  0%, 60%   { opacity: 0.45; }
+  61%, 100% { opacity: 0.08; }
+}
+.ripple            { animation: shimmer 1.6s ease-in-out infinite alternate; }
+.ripple:nth-child(2) { animation-duration: 1.1s; }
+.ripple:nth-child(3) { animation-duration: 1.9s; }
+@keyframes shimmer {
+  from { transform: translateX(-2px); }
+  to   { transform: translateX(2px); }
+}
+
+/* Rig position and size. The rig is drawn around (0, 0) = its centre at
+   the waterline; this moves it onto the horizon (y = 440) and scales it.
+   Placed well right of the title, with open sky above it. */
+.rig-place { transform: translate(800px, 440px) scale(0.46); }
+
+@media (min-width: 640px) {
+  .rig-place { transform: translate(880px, 440px) scale(0.7); }
+}
+@media (min-width: 1100px) {
+  .rig-place { transform: translate(1000px, 440px) scale(0.82); }
+}
+
+/* The rig bobs a couple of pixels in the swell. */
+.rig { animation: bob 9s ease-in-out infinite; }
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(2px); }
+}
+
+/* Warning beacon blinks. */
+.beacon, .beacon-glow { animation: blink 2.4s steps(1) infinite; }
+@keyframes blink {
+  0%, 60%   { opacity: 1; }
+  61%, 100% { opacity: 0.15; }
+}
+
+/* Respect users who turn off animations in their OS settings:
+   every animation stops and the scene stays still. */
+@media (prefers-reduced-motion: reduce) {
+  .wave, .clouds, .rig, .beacon, .beacon-glow,
+  .aurora, .band-1, .band-2,
+  .mist, .reflection, .ripple { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+
+/* ---------- 4. Buttons ---------- */
+.btn {
+  display: inline-block;
+  padding: 11px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font: 600 14px var(--font-text);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+/* Main call-to-action: one of the few orange elements */
+.btn-primary { background: var(--orange); color: var(--navy-deep); }
+.btn-primary:hover { background: #ff7a42; }
+
+.btn-scenario,
+.btn-outline {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ice);
+  padding: 9px 16px;
+}
+.btn-scenario:hover,
+.btn-outline:hover { border-color: var(--ice-dim); }
+.btn-scenario.is-active,
+.btn-outline.is-active {          /* set by app.js */
+  background: var(--ice);
+  border-color: var(--ice);
+  color: var(--navy-deep);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ice-dim);
+  margin-top: 16px;
+}
+.btn-ghost:hover { color: var(--ice); border-color: var(--ice-dim); }
+
+.btn:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--ice);
+  outline-offset: 2px;
+}
+
+
+/* ---------- 4b. Deal facts ----------
+   Flexbox with wrapping: items in the last row stretch to fill it,
+   so there is never an empty box, whatever the number of facts. */
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  margin: 0;
+  background: var(--panel-2);      /* shows through the gaps as thin lines */
+  border: 1px solid var(--panel-2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.fact {
+  flex: 1 1 240px;
+  background: var(--panel);
+  padding: 16px 18px;
+}
+.fact dt {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ice-dim);
+}
+.fact dd { margin: 4px 0 0; font-weight: 500; }
+
+.cite {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ice-dim);
+  text-decoration: none;
+  margin-left: 4px;
+  vertical-align: super;
+}
+.cite:hover { color: var(--ice); }
+
+
+/* ---------- 4c. Stress tester panels ---------- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-2);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+/* Mobile: one column, results on top. Desktop: see section 7. */
+.tester-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-areas:
+    "results"
+    "controls";
+}
+.results  { grid-area: results; }
+.controls { grid-area: controls; }
+
+
+/* Readouts = the "instrument" numbers */
+.readout { display: flex; flex-direction: column; gap: 2px; }
+
+.readout-label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ice-dim);
+}
+
+.readout-value {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.readout-note { font-size: 13px; color: var(--ice-dim); }
+
+.readout-hero {
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--panel-2);
+}
+.readout-hero .readout-value {
+  font-size: clamp(38px, 7vw, 54px);
+  font-weight: 600;
+  line-height: 1.1;
+}
+.readout-hero .readout-note { font-size: 14px; }
+
+.readout-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 16px;
+}
+
+.is-positive { color: var(--positive); }
+.is-negative { color: var(--negative); }
+
+
+/* Scenario row */
+.scenario-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding-bottom: 18px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--panel-2);
+}
+.control-label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ice-dim);
+}
+.scenario-buttons { display: flex; gap: 8px; }
+.scenario-status {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ice-dim);
+}
+
+
+/* Sliders */
+.slider { padding: 16px 0 4px; }
+
+.slider-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.slider-head label { font-weight: 500; }
+.slider-head output { color: var(--ice); font-size: 17px; white-space: nowrap; }
+
+.slider-hint { margin: 8px 0 0; font-size: 13px; color: var(--ice-dim); }
+
+/* Custom range input. --fill is set by app.js to colour the used part. */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right,
+    var(--steel-light) var(--fill, 50%),
+    var(--panel-2) var(--fill, 50%));
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ice);
+  border: 4px solid var(--steel-light);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ice);
+  border: 4px solid var(--steel-light);
+}
+
+
+/* Current deal section: action buttons, heading row, editor */
+.deal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.deal-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.deal-head .btn-ghost { margin-top: 0; }
+
+.deal-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.deal-title-label { color: var(--ice-dim); font-weight: 500; }
+
+.deal-editor { margin-bottom: 16px; }
+.deal-editor .input-grid { margin-top: 0; }
+
+/* Note shown instead of the chart when the deal is incomplete */
+.empty-note { margin: 0; color: var(--ice-dim); }
+
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.input-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ice-dim);
+}
+.input-grid input {
+  padding: 9px 10px;
+  background: var(--navy);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ice);
+  font: 500 15px var(--font-mono);
+}
+
+
+/* ---------- 5. Chart ---------- */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--ice-dim);
+}
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 2px;
+}
+.swatch-operating { background: var(--steel); }
+.swatch-residual  { background: var(--steel-light); }
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 240px;
+}
+
+.bar-col {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.bar-value {
+  font: 500 12px var(--font-mono);
+  color: var(--ice-dim);
+  margin-bottom: 4px;
+}
+
+.bar-stack {
+  width: 100%;
+  max-width: 56px;
+  display: flex;
+  flex-direction: column;     /* residual sits on top of operating */
+}
+.bar-residual  { background: var(--steel-light); border-radius: 2px 2px 0 0; }
+.bar-operating { background: var(--steel); }
+
+.bar-year {
+  margin-top: 6px;
+  font: 500 12px var(--font-mono);
+  color: var(--ice-dim);
+}
+
+
+/* Table */
+.table-wrap {
+  margin-top: 16px;
+  overflow-x: auto;              /* scrolls sideways on small screens */
+  border: 1px solid var(--panel-2);
+  border-radius: var(--radius);
+}
+
+.cf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.cf-table th,
+.cf-table td {
+  padding: 10px 14px;
+  text-align: right;
+}
+.cf-table th:first-child,
+.cf-table td:first-child { text-align: left; }
+
+.cf-table thead th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ice-dim);
+  background: var(--panel);
+  vertical-align: bottom;
+}
+.cf-table td {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  border-top: 1px solid var(--panel-2);
+}
+.cf-table tfoot td {
+  font-weight: 600;
+  color: var(--ice);
+  border-top: 1px solid var(--line);
+}
+
+
+/* Price comparison */
+.compare { display: flex; flex-direction: column; gap: 20px; }
+
+.cmp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+.cmp-value { font: 500 15px var(--font-mono); white-space: nowrap; }
+
+.tag {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-size: 11px;
+  color: var(--ice-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cmp-track {
+  position: relative;
+  height: 14px;
+  background: var(--navy);
+  border-radius: 3px;
+}
+.cmp-bar {
+  height: 100%;
+  background: var(--steel);
+  border-radius: 3px;
+}
+/* The Odfjell bar: one of the few orange elements */
+.cmp-row.is-deal .cmp-bar   { background: var(--orange); }
+.cmp-row.is-deal .cmp-value { color: var(--orange); }
+
+.cmp-marker {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  border-left: 2px dashed var(--ice);
+}
+
+.cmp-legend { font-size: 13px; color: var(--ice-dim); margin: 4px 0 0; }
+
+
+/* Method list */
+.method-list {
+  margin: 0;
+  padding-left: 18px;
+  max-width: 78ch;
+  color: var(--ice-dim);
+}
+.method-list li { margin-bottom: 10px; }
+.method-list strong { color: var(--ice); font-weight: 600; }
+
+
+/* ---------- 6. Footer ---------- */
+.footer {
+  margin-top: 64px;
+  padding: 40px 0 48px;
+  background: var(--navy-deep);
+  border-top: 1px solid var(--panel-2);
+}
+.sources { padding-left: 22px; margin: 0 0 20px; font-size: 14px; color: var(--ice-dim); }
+.sources li { margin-bottom: 6px; }
+.sources a { color: var(--ice); text-underline-offset: 3px; word-break: break-word; }
+.footer-note { font-size: 13px; color: var(--ice-dim); margin: 0; }
+
+
+/* ---------- 7. Larger screens ---------- */
+@media (min-width: 640px) {
+  .readout-grid { grid-template-columns: repeat(3, 1fr); }
+  .hero-content { padding-top: 110px; }
+}
+
+@media (min-width: 900px) {
+  /* Two columns: controls left, results right (results stay visible while scrolling) */
+  .tester-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "controls results";
+    align-items: start;
+  }
+  .results { position: sticky; top: 16px; }
+  .readout-grid { grid-template-columns: repeat(2, 1fr); }
+  .panel { padding: 28px; }
+}
